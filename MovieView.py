@@ -8,31 +8,23 @@ from webargs.flaskparser import use_kwargs, parser
 from flask_jsonpify import jsonify
 import urllib3
 
-import db
-
-#engine = create_engine('mysql://dbadmin:student@cr.cinestar-internal.lan/Cinestar', echo =True)
-engine = create_engine('mysql://root:student@localhost/cinestar')
-
-Session = sessionmaker(bind=engine)
-
-
+from app import db, ma, models
 
 def movSearch(queryArgs):
 
     print ("we started movSearch")
-    session=Session()
     containsexact=False
     exactmatch={'0'}
 
 
     #first, check if anything even similar exists in the db. 
 
-    if session.query(exists().where(func.lower(db.Movies.Title.like(func.lower(queryArgs['movie']))))).scalar():
+    if db.session.query(exists().where(func.lower(models.Movies.Title.like(func.lower(queryArgs['movie']))))).scalar():
         print ("we found similar")
-        similar = session.query(db.Movies).filter(func.lower([db.Movies.Title.like(func.lower(queryArgs['movie']))]))
+        similar = db.session.query(db.Movies).filter(func.lower([models.Movies.Title.like(func.lower(queryArgs['movie']))]))
 
         #check for an exact match
-        if session.query(exists().where(func.lower(db.Movies.Title)==func.lower(queryArgs['movie']))).scalar():
+        if db.session.query(exists().where(func.lower(models.Movies.Title)==func.lower(queryArgs['movie']))).scalar():
             containsexact = True
             print ("an exact match was found")
      
@@ -54,6 +46,44 @@ def newMov(queryArgs):
            'GET', 
            MovUrl,
            fields = {'apikey':apiKey, 't':queryArgs['m'],'r': 'json'})
-       returned_data = json.loads(r.data.decode('utf-8'))
-       print (returned_data)
-       return ("deed eet")
+       mData = json.loads(r.data.decode('utf8'))
+       print (type(mData))
+       
+
+                                
+    if db.session.query(exists().where(Title == mdata['Title'])):
+        #Then we already have either summary or complete data and are probably updating
+        modMov = db.session.query(models.Movies)/.
+        filter(models.Movies.Title == mData['title']).first()
+        
+        modMov.Certification = Mdata['Rated']
+        modMov.Release_date = ['Released']
+        modMov.
+            
+        return (something)
+    else: #we don't have a match, so add the data rather than just update
+                 
+                 new_movie = models.Movies(
+                                Title = mData['Title'],
+                                Year = mData['Year'],
+                                Certification = mData['Rated'],
+                                Release_date = mData['Released'],
+                                Runtime= mData['Runtime'],
+                                Genres= mData['Genre'],
+                                Directors = mData['Director'],
+                                Writers = mData['Writer'],
+                                Actors= mData['Actors'],
+                                Synopsis= mData['Plot'],
+                                Languages= mData['Language'],
+                                Awards= mData['Awards'],
+                                Poster_URL= mData['Poster'],
+                                MetaScore= mData['Metascore'],
+                                IMDBRating=mData['imdbRating'],
+                                Type= mData['Type'],
+                                DVD = mData['DVD'],
+                                Website= mData['Website'])
+        
+        db.session.add(new_movie)
+
+       
+    return ("deed eet")

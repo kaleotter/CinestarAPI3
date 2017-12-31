@@ -35,7 +35,7 @@ class Movies (db.Model):
     Writers = db.Column(db.String(1000)) 
     Actors = db.Column(db.String(1000)) 
     Synopsis = db.Column(db.String(5000)) 
-    languages = db.Column(db.String(500)) 
+    Languages = db.Column(db.String(500)) 
     Country = db.Column(db.String(70)) 
     Awards = db.Column(db.String(500)) 
     Poster_URL = db.Column(db.String(1000)) 
@@ -57,15 +57,15 @@ class Movies (db.Model):
                 self.Writers,
                 self.Actors,
                 self.Synopsis,
-                self.languages,
+                self.Languages,
                 self.Country,
                 self.Awards,
                 self.Poster_URL,
                 self.IMDBRating,
                 self.MetaScore,
                 self.Type,
-                Self.DVD,
-                Self.Website
+                self.DVD,
+                self.Website
                 )
                 
 
@@ -73,3 +73,6 @@ class Movies (db.Model):
 class UserSchema (ma.ModelSchema):
     class Meta:
         model = Users
+        fields = ('username', 'email')
+    #user_schema = UserSchema()
+    #users_schema = UserSchema(many=True)

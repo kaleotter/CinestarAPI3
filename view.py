@@ -1,7 +1,7 @@
 # To change this license header, choose License Headers in Project Properties.
 # To change this template file, choose Tools | Templates
 # and open the template in the editor.
-from flask import Flask, request
+from flask import Flask, request, Response
 from requests import put, get
 from flask_restful import Resource, Api, abort, fields, marshal_with, reqparse 
 from json import dumps
@@ -14,6 +14,7 @@ from app import app
 
 #internal modules
 import userView
+import MovieView 
 
 
 api = Api(app)
@@ -114,8 +115,12 @@ class Profile (Resource):
             responseData= {"message":"No user profile found with that ID"}
             responseCode =404
             
+        elif statusCode ==0:
+            responseData = data["data"]
+            responseCode= 200
+            
 
-        return responseData, responseCode 
+        return Response (responseData, status =responseCode, mimetype = 'application/json') 
             
 class Login (Resource):
     def post (self):

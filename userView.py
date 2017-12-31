@@ -19,7 +19,7 @@ from app import db, ma, models
 #engine = create_engine('mysql://dbadmin:student@cr.cinestar-internal.lan/Cinestar', echo =True)
 engine = create_engine('mysql://root:student@localhost/cinestar', echo=False)
 
-Session = sessionmaker(bind=engine)
+#Session = sessionmaker(bind=engine)
 
 def createNewUser(jsondata):
     session = Session()
@@ -86,9 +86,9 @@ def doLogin(json_data):
 
 def getUser (u):
 
-    session = Session()
+    #session = Session()
     returndata = {"status":2}
-    if session.query(exists().where(models.Users.userID==u)).scalar():
+    if db.session.query(exists().where(models.Users.userID==u)).scalar():
 
         print ("we found a user")
 
@@ -97,18 +97,26 @@ def getUser (u):
         #    data = {"username": q.username, "email": q.email}    
             
         #returndata={"status": '0', "Data": "some data here mate"}
-        User_Schema = models.UserSchema()
+        Users_Schema = models.UserSchema(many=True)
         
-        q = session.query(models.Users)
+        all_users = db.session.query(models.Users).all()
+        result = Users_Schema.dump(all_users)
         
-        print (User_Schema.dump(q).data)
+        resultData = jsonify(result.data)
+        
+        
+        #print ('we tried to jsonify: ')
+        #print (jsonData)
+        
+        returndata = {"status":0, "data": resultData}
         
 
     else:
             
-        returndata = {"status": 1, "Data":""}
-
-    return (returndata)
+        returndata = {"status": 1, "data":""}
+    
+    print (returndata["status"])
+    return (returndata) 
     
     
     
