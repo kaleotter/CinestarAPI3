@@ -10,18 +10,21 @@ import urllib3
 
 from app import db, ma, models
 
-def movSearch(queryArgs):
+class MovSearch
+    def Search(queryArgs):
 
     print ("we started movSearch")
     containsexact=False
     exactmatch={'0'}
-
+    
 
     #first, check if anything even similar exists in the db. 
 
     if db.session.query(exists().where(func.lower(models.Movies.Title.like(func.lower(queryArgs['movie']))))).scalar():
         print ("we found similar")
-        similar = db.session.query(db.Movies).filter(func.lower([models.Movies.Title.like(func.lower(queryArgs['movie']))]))
+        similar = db.session.query(models.Movies).filter(func.lower([models.Movies.Title.like(func.lower(queryArgs['movie']))]))
+        
+        search_results = models.Mov_S_Schema(similar).jsonify
 
         #check for an exact match
         if db.session.query(exists().where(func.lower(models.Movies.Title)==func.lower(queryArgs['movie']))).scalar():
@@ -36,54 +39,109 @@ def movSearch(queryArgs):
 
  
     
-
-def newMov(queryArgs):
-   
-       apiKey= '36d82221'
-       MovUrl = 'http://www.omdbapi.com/'
-       http = urllib3.PoolManager()
-       r= http.request(
-           'GET', 
-           MovUrl,
-           fields = {'apikey':apiKey, 't':queryArgs['m'],'r': 'json'})
-       mData = json.loads(r.data.decode('utf8'))
-       print (type(mData))
-       
-
-                                
-    if db.session.query(exists().where(Title == mdata['Title'])):
-        #Then we already have either summary or complete data and are probably updating
-        modMov = db.session.query(models.Movies)/.
-        filter(models.Movies.Title == mData['title']).first()
+class OMBD:
+    
+    apiKey = '36d82221'
+    
+    def accessAPI(arguments):
         
-        modMov.Certification = Mdata['Rated']
-        modMov.Release_date = ['Released']
-        modMov.
+        MovUrl = 'http://www.omdbapi.com/'
+        http = urllib3.PoolManager()
+        
+        
+        
+        try:
+            r= http.request(
+                'GET', 
+                MovUrl,
+                fields = arguments)
+            returndata = json.loads(r.data.decode('utf8'))
             
-        return (something)
-    else: #we don't have a match, so add the data rather than just update
-                 
-                 new_movie = models.Movies(
-                                Title = mData['Title'],
-                                Year = mData['Year'],
-                                Certification = mData['Rated'],
-                                Release_date = mData['Released'],
-                                Runtime= mData['Runtime'],
-                                Genres= mData['Genre'],
-                                Directors = mData['Director'],
-                                Writers = mData['Writer'],
-                                Actors= mData['Actors'],
-                                Synopsis= mData['Plot'],
-                                Languages= mData['Language'],
-                                Awards= mData['Awards'],
-                                Poster_URL= mData['Poster'],
-                                MetaScore= mData['Metascore'],
-                                IMDBRating=mData['imdbRating'],
-                                Type= mData['Type'],
-                                DVD = mData['DVD'],
-                                Website= mData['Website'])
+        except Exception as e:
         
-        db.session.add(new_movie)
+            returndata = {"status":4, "data": e}
+        
+        return returndata
+        
+        
 
+    def updateMov(self,id): 
+   
+        
+        
+        if db.session.query(exists().where(models.Movies.MovieId==id )):
+   
+            titleID = session.query(db.models.Movies.ImdbID)\.
+            filter(models.Movies.MovieID==id).first
+        
+        
+            mData = accessAPI({"apikey": apiKey, "i": titleID, "type":"movie"})
+        
+            #check that our data is valid.
+            if "Title" not in mData.keys():
+                responsedata = {"status": 5, "data": mData}
+            
+                return (responsedata)    
+            
+            
+            #create the data ready for modification
+            modMov = db.session.query(models.Movies)\.
+            filter(models.Movies.MovID == id).first()
+                
+            modMov.Title = mData['Title']
+            modMov.Year = mData['year']
+            modMov.Certification = mData['Rated']
+            modMov.Release_date = mData['Released']
+            modMov.Runtime= mData['Runtime']
+            modMov.Genres= mData['Genre']
+            modMov.Directors = mData['Director']
+            modMov.Writers = mData['Writer']
+            modMov.Actors= mData['Actors']
+            modMov.Synopsis = mData['Plot']
+            modMov.Languages = mData['Language']
+            modMov.Awards = mData['Awards']
+            modMov.Poster_URL= mData['Poster']
+            modMov.IMDBRating = mData['imdbRating']
+            modMov.MetaScore = mData['MetaScore']
+            modMov.Type = mData['Type']
+            modMov.DVD = mData['DVD']
+            movMod.Website = mData['Website']
+        
+            returndata = {"status":2, "data": "we successfully updated %s!" %(mData['Title'])}
+            
+            try:    #Attempt to commit changes to db. If we fail then Raise error and pass it back
+                db.commit()
+            except Exception as e:
+                
+                return {"status": 7, "data": e}
+            
+        else:
+    
+       #There was no movie at the provided ID
+            returndata = {"status":6, "data": "Movie Not found."}
        
-    return ("deed eet")
+        return returndata
+    
+    def newMovies ("MovieTitle"):
+        
+
+            mData = accessAPI({"apikey": apiKey, "i": titleID, "type":"movie"})
+        
+            #check that our data is valid.
+            if "Title" not in mData.keys():
+                responsedata = {"status": 5, "data": mData}
+            
+                return (responsedata)
+            
+            for Movies in mData 
+        
+        new_movie = models.Movies(
+                    Title = mData['Title'],
+                    Year = mData['Year'],
+                    Poster_URL= mData['Poster']
+                    ImdbID = mData[''])
+        
+            db.session.add(new_movie)
+        
+            returndata = {"status": 1, "data":"We successfully added %s" %(mData['Title'])}
+   

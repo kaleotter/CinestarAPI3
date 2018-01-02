@@ -21,7 +21,7 @@ engine = create_engine('mysql://root:student@localhost/cinestar', echo=False)
 
 #Session = sessionmaker(bind=engine)
 
-def createNewUser(jsondata):
+def createNewUser(jsondata,action):  
     session = Session()
 
         
@@ -43,9 +43,9 @@ def createNewUser(jsondata):
     pw_salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(pw.encode('utf8'),pw_salt)
 
-    new_user = db.Users(username = user, email = email, password = hashed, salt = pw_salt)
-    session.add(new_user)
-    session.commit()
+    new_user = model.Users(username = user, email = email, password = hashed, salt = pw_salt)
+    db.session.add(new_user)
+    db.session.commit()
         
     return jsonify({"Message":"Account created successfully! You Can now Log in"})
 
@@ -61,11 +61,11 @@ def doLogin(json_data):
     
     
     #First Work out if the user exists
-    if (session.query(exists().where(db.Users.username == user_name)).scalar()):
+    if (db.query(exists().where(models.Users.username == user_name)).scalar()):
         
         print ("User Found")
         #We know the user Exists, so now we can check thier password
-        for instance in session.query(db.Users).\
+        for instance in db.session.query(models.Users).\
                               filter_by(username = user_name): 
 
             if bcrypt.checkpw(password_raw.encode('utf8'),instance.password):

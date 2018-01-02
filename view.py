@@ -62,23 +62,27 @@ class MovieSearch (Resource):
     def post (self, m, a, order, sort):
             
 
-            MovieView.newMov({'m': m})
+            data = MovieView.newMov({'m': m},"c")
+            
+            
+                
+                
 
             return ('not done yet')
     
 class MovieId (Resource):
     def get (self,id):
-        conn = utils.DbConn.conn().connect()
-        query = conn.execute("SELECT * FROM movies WHERE MovID=%d" %int(id))
-        result ={'data': [dict(zip(tuple (query.keys()),i)) for i in query.cursor]}
         
-        if query != null:               #if the query contains data
-            return jsonify(result)
+        #we're going to display a movie
         
-        else:
-            return jsonify("some kind of error")
-            
-    
+        return ("not done yet")
+        
+        
+
+    class  (Resource):
+        
+        def put 
+
     class MovieReviews(Resource):
         def get(self,MovId):
             
@@ -141,8 +145,19 @@ class Login (Resource):
             return jsonify(response_data['data'])
 
 #AAAAAAAH I COMMENTED THIS OUT.     
-api.add_resource(Movies, '/Movies')
-api.add_resource(MovieId, '/Movies/<movie_ID>')
+
+class UpdateMovie(Resource): #Updates a movie with all relevant data
+class AddSummary(Resource): #Adds summary data for new movie searches
+    
+    def put (self, movie_ID):
+        
+        return ("Im not done yet")
+        
+
+api.add_resource(Movies, '/movies')
+api.add_resource(MovieId, '/movies/<int:movie_ID>')
+api.add_resource(UpdateMovie, '/movies/<int:movie_ID/update')
+api.add_resource(AddMov, 'movies/summaries')
 api.add_resource(MovieSearch, '/movies/search', endpoint='search')
 api.add_resource(Users, '/users')
 api.add_resource(Profile, '/users/<int:usr_ID>')

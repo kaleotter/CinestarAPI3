@@ -44,9 +44,10 @@ class Movies (db.Model):
     Type = db.Column(db.String(50)) 
     DVD =db.Column(db.DATE)
     Website = db.Column(db.String(500))
+    ImdbID = db.Column (db.Integer)
     
     def  __repr__(self):
-        return "<Movies (Title='%s',Year='%s',Certification='%s',Release_date='%s',Runtime='%s',Genres='%s',Directors='%s',Writers='%s', Actors='%s', Synopsis='%s', languages='%s', Country='%s',Awards='%s',Poster_URL='%s',IMDBRating='%s', MetaScore='%s',Type='%s',DVD='%s',Website='%s')>" % (
+        return "<Movies (Title='%s',Year='%s',Certification='%s',Release_date='%s',Runtime='%s',Genres='%s',Directors='%s',Writers='%s', Actors='%s', Synopsis='%s', languages='%s', Country='%s',Awards='%s',Poster_URL='%s',IMDBRating='%s', MetaScore='%s',Type='%s',DVD='%s',Website='%s', ImdbID = '%s')>" % (
                 self.Title,
                 self.Year,
                 self.Certification,
@@ -65,7 +66,8 @@ class Movies (db.Model):
                 self.MetaScore,
                 self.Type,
                 self.DVD,
-                self.Website
+                self.Website,
+                self.ImdbID 
                 )
                 
 
@@ -76,3 +78,10 @@ class UserSchema (ma.ModelSchema):
         fields = ('username', 'email')
     #user_schema = UserSchema()
     #users_schema = UserSchema(many=True)
+    
+class MoviesSearchSchema(ma.ModelSchema):
+    class Meta:
+        model = Movies
+        fields= ('Title', 'Year', 'imdbID', 'Type')
+        
+Mov_S_Schema = MoviesSearchSchema(many = True)
