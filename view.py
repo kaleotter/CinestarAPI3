@@ -157,7 +157,7 @@ class AddSummary(Resource): #Adds summary data for new movie searches
 api.add_resource(Movies, '/movies')
 api.add_resource(MovieId, '/movies/<int:movie_ID>')
 api.add_resource(UpdateMovie, '/movies/<int:movie_ID/update')
-api.add_resource(AddMov, 'movies/summaries')
+api.add_resource(AddMov, 'movies/summary')
 api.add_resource(MovieSearch, '/movies/search', endpoint='search')
 api.add_resource(Users, '/users')
 api.add_resource(Profile, '/users/<int:usr_ID>')

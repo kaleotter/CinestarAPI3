@@ -122,26 +122,39 @@ class OMBD:
        
         return returndata
     
-    def newMovies ("MovieTitle"):
+    def newMovies (self,MovieTitle):
         
 
-            mData = accessAPI({"apikey": apiKey, "i": titleID, "type":"movie"})
+        mData = accessAPI({"apikey": apiKey, "i": titleID, "type":"movie"})
         
-            #check that our data is valid.
-            if "Title" not in mData.keys():
-                responsedata = {"status": 5, "data": mData}
+        #check that our data is valid.
+        if "Title" not in mData.keys():
+            responsedata = {"status": 5, "data": mData}
             
-                return (responsedata)
+            return (responsedata)
             
-            for Movies in mData 
+            dataList= mdata['Search']
+              
+            for elem in datalist: 
         
-        new_movie = models.Movies(
-                    Title = mData['Title'],
-                    Year = mData['Year'],
-                    Poster_URL= mData['Poster']
-                    ImdbID = mData[''])
+                new_movie = models.Movies(
+                Title = elem['Title'],
+                Year = elem['Year'],
+                Poster_URL= elem['Poster'],
+                Type = elem['Type'],
+                ImdbID = elem['imdbID'])
         
-            db.session.add(new_movie)
+                db.session.add(new_movie)
+            
+            try:
+                
+                db.session.commit()
+                    
+            except Exception as e:
+                    
+                return {"status": 7, "data": e}
+                            
         
-            returndata = {"status": 1, "data":"We successfully added %s" %(mData['Title'])}
-   
+        returndata = {"status": 1, "data":"Successfully added %s items" %(dataList.len())}
+            
+        return returndata
