@@ -3,12 +3,6 @@
 # and open the template in the editor.
 
 #Imports
-from flask import Flask
-from sqlalchemy import create_engine, exists, func, alias
-from sqlalchemy.orm import sessionmaker
-from json import dumps
-from webargs import fields, validate
-from webargs.flaskparser import use_kwargs, parser
 from json import *
 from flask_jsonpify import jsonify
 import bcrypt
@@ -16,25 +10,19 @@ import bcrypt
 #Local Modules
 from app import db, ma, models
 
-#engine = create_engine('mysql://dbadmin:student@cr.cinestar-internal.lan/Cinestar', echo =True)
-engine = create_engine('mysql://root:student@localhost/cinestar', echo=False)
 
-#Session = sessionmaker(bind=engine)
-
-def createNewUser(jsondata,action):  
-    session = Session()
-
+def createNewUser(jsondata):  
         
     user = jsondata['username']
     email = jsondata['email']
     pw =  jsondata['password']
         
     #first check if account with user unique
-    if (session.query(exists().where(model.Users.email == email)).scalar()):
+    if (db.session.query(db.exists().where(models.Users.email == email)).scalar()):
         return jsonify({"Message":"An account with this email already exists!"})
         
     #then check to see if username is unique
-    if (session.query(exists().where(model.Users.username == user)).scalar()):
+    if (db.session.query(db.exists().where(models.Users.username == user)).scalar()):
         return jsonify({"Message":"An account with this username azlready exists!"})
         
     #we can then prepare to create the account
@@ -43,7 +31,7 @@ def createNewUser(jsondata,action):
     pw_salt = bcrypt.gensalt()
     hashed = bcrypt.hashpw(pw.encode('utf8'),pw_salt)
 
-    new_user = model.Users(username = user, email = email, password = hashed, salt = pw_salt)
+    new_user = models.Users(username = user, email = email, password = hashed, salt = pw_salt)
     db.session.add(new_user)
     db.session.commit()
         
@@ -51,7 +39,6 @@ def createNewUser(jsondata,action):
 
 
 def doLogin(json_data):
-    session = Session()
     
     user_name=json_data["username"]
     print (user_name)
@@ -61,7 +48,7 @@ def doLogin(json_data):
     
     
     #First Work out if the user exists
-    if (db.query(exists().where(models.Users.username == user_name)).scalar()):
+    if (db.session.query(db.exists().where(models.Users.username == user_name)).scalar()):
         
         print ("User Found")
         #We know the user Exists, so now we can check thier password
@@ -92,11 +79,6 @@ def getUser (u):
 
         print ("we found a user")
 
-        #for q in session.query(db.Users).filter(db.Users.userID==u).all():
-            
-        #    data = {"username": q.username, "email": q.email}    
-            
-        #returndata={"status": '0', "Data": "some data here mate"}
         Users_Schema = models.UserSchema(many=True)
         
         all_users = db.session.query(models.Users).all()

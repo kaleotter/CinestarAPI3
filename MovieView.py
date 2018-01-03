@@ -1,12 +1,5 @@
-from flask import Flask, json
-from flask_restful import abort
-from sqlalchemy import create_engine, exists, func
-from sqlalchemy.orm import sessionmaker
-from json import dumps
-from webargs import fields, validate
-from webargs.flaskparser import use_kwargs, parser
-from flask_jsonpify import jsonify
-import urllib3
+import json
+import urllib3  
 
 from app import db, ma, models
 
@@ -15,12 +8,14 @@ from app import db, ma, models
 #1: Completed Successfully
 #2: Problem with OMDB link
 #3: Problem with Database 
-#4:
+#4: 
 #5:
 #6:
 
-class Search:
-    def Search(queryArgs):
+class getMovies:
+    def summaries(queryArgs):
+        
+        
 
         print ("we started movSearch")
         containsexact=False
@@ -28,27 +23,30 @@ class Search:
     
 
         #first, check if anything even similar exists in the db. 
-
-        if db.session.query(exists().where(func.lower(models.Movies.Title.like(func.lower(queryArgs['movie']))))).scalar():
-            print ("we found similar")
-            similar = db.session.query(models.Movies).filter(func.lower([models.Movies.Title.like(func.lower(queryArgs['movie']))]))
+        try:
+            if db.session.query(db.exists().where(db.func.lower(models.Movies.Title.like(db.func.lower(queryArgs['movie']))))).scalar():
+                print ("we found similar")
+                
+                similar = db.session.query(models.Movies).filter(db.func.lower([models.Movies.Title.like(db.func.lower(queryArgs['movie']))]))
         
             search_results = models.Mov_S_Schema(similar).jsonify
-
-            #check for an exact match
-        if db.session.query(exists().where(func.lower(models.Movies.Title)==func.lower(queryArgs['movie']))).scalar():
-            containsexact = True
-            print ("an exact match was found")
-     
-            return ({"status":2}) 
+            
+            print (search_results)
+            
+        except Exception as e:
+            print ("something went very wrong")
+            print (e)
+            return {"status":2, "data": e}
 
         else: #we found exactly nothing
-        
-            return({"status":0})
+            print ("nothing found")
+            returnmeassage = {"status":0, "data":''}
+            
+        return returnmessage
 
  
     
-class OMBD:
+class OMDB:
     
     apiKey = '36d82221'
     
@@ -66,6 +64,8 @@ class OMBD:
                 fields = arguments)
             returndata = json.loads(r.data.decode('utf8'))
             
+            print (arguments)
+            
         except Exception as e:
         
             returndata = {"status":2, "data": e}
@@ -74,96 +74,134 @@ class OMBD:
         
         
 
-    def updateMov(self,id): 
+    def update(id): 
    
         
-        
-        if db.session.query(exists().where(models.Movies.MovieId==id )):
+        try:
+            
+            if db.session.query(db.exists().where(models.Movies.MovieID==id )):
    
-            titleID = session.query(db.models.Movies.ImdbID)\.
-            filter(models.Movies.MovieID==id).first
+                try:
+                    titleID =db.session.query(models.Movies)\
+                            .filter(models.Movies.MovieID==id).first()
+                            
+                    print(titleID.ImdbID)        
+                except Exception as e:
+                    return {"status":3, "data":e}
         
         
-            mData = accessAPI({"apikey": apiKey, "i": titleID, "type":"movie"})
-        
-            #check that our data is valid.
-            if "Title" not in mData.keys():
-                responsedata = {"status": 5, "data": mData}
-            
-                return (responsedata)    
-            
-            
-            #create the data ready for modification
-            modMov = db.session.query(models.Movies)\.
-            filter(models.Movies.MovID == id).first()
+                mData = OMDB.accessAPI({"apikey": OMDB.apiKey, "i": titleID.ImdbID, "type":"movie"})
+                print (mData)
                 
-            modMov.Title = mData['Title']
-            modMov.Year = mData['year']
-            modMov.Certification = mData['Rated']
-            modMov.Release_date = mData['Released']
-            modMov.Runtime= mData['Runtime']
-            modMov.Genres= mData['Genre']
-            modMov.Directors = mData['Director']
-            modMov.Writers = mData['Writer']
-            modMov.Actors= mData['Actors']
-            modMov.Synopsis = mData['Plot']
-            modMov.Languages = mData['Language']
-            modMov.Awards = mData['Awards']
-            modMov.Poster_URL= mData['Poster']
-            modMov.IMDBRating = mData['imdbRating']
-            modMov.MetaScore = mData['MetaScore']
-            modMov.Type = mData['Type']
-            modMov.DVD = mData['DVD']
-            movMod.Website = mData['Website']
-        
-            returndata = {"status":2, "data": "we successfully updated %s!" %(mData['Title'])}
+                #check that our data is valid.
+                if "Title" not in mData.keys():
+                    print ("we found that data was not correct")
+                    responsedata = {"status": 5, "data": mData}
             
-            try:    #Attempt to commit changes to db. If we fail then Raise error and pass it back
-                db.commit()
-            except Exception as e:
+                    return (responsedata)    
+            
+            
+                #create the data ready for modification
+                try:
+                    print("trying to run query")
+                    modMov = db.session.query(models.Movies)\
+                    .filter(models.Movies.MovieID == id).first()
                 
-                return {"status": 7, "data": e}
+                except Exception as e:
+                    print ("query failed to run")
+                    print(e)
+                    return {"status":3, "data":e}
+                
+                modMov.Title = mData['Title']
+                modMov.Year = mData['Year']
+                modMov.Certification = mData['Rated']
+                modMov.Release_date = mData['Released']
+                modMov.Runtime= mData['Runtime']
+                modMov.Genres= mData['Genre']
+                modMov.Directors = mData['Director']
+                modMov.Writers = mData['Writer']
+                modMov.Actors= mData['Actors']
+                modMov.Synopsis = mData['Plot']
+                modMov.Languages = mData['Language']
+                modMov.Awards = mData['Awards']
+                modMov.Poster_URL= mData['Poster']
+                modMov.IMDBRating = mData['imdbRating']
+                modMov.MetaScore = mData['Metascore']
+                modMov.Type = mData['Type']
+                modMov.DVD = mData['DVD']
+                modMov.Website = mData['Website']
+        
+                
             
-        else:
+                try:    #Attempt to commit changes to db. If we fail then Raise error and pass it back
+                    print ("tried to commit modification")
+                    #db.session.add(modMov)
+                    db.session.commit()
+                except Exception as e:
+                
+                    print ("database commit failed")
+                    return {"status": 3, "data": e}
+                
+                print ("database commit succeeded")
+                returndata = {"status":1, "data": "we successfully updated %s!" 
+                                                            %(mData['Title'])}
+            
+            else:
     
-       #There was no movie at the provided ID
-            returndata = {"status":0, "data": "Movie Not found."}
+            #There was no movie at the provided ID
+                print ("no movie at this id")
+                returndata = {"status":0, "data": "Movie Not found."}
+            
+        except Exception as e:
+            
+            print ("query failed")
+            return {"status":3, "data":e}
        
         return returndata
     
-    def newMovies (self,MovieTitle):
+    def summaries (movieTitle):
         
 
-        mData = accessAPI({"apikey": apiKey, "i": titleID, "type":"movie"})
+        mData = OMDB.accessAPI({"apikey": OMDB.apiKey, "s": movieTitle, "type":"movie"})
         
         #check that our data is valid.
-        if "Title" not in mData.keys():
-            responsedata = {"status": 0, "data": mData}
+        if "Search" not in mData.keys():
+            responsedata = {"status": 2, "data": mData}
             
             return (responsedata)
             
-            dataList= mdata['Search']
-              
-            for elem in datalist: 
+        else:
+            dataList= mData['Search']
+            itemsAdded = 0  
+            for elem in dataList: 
+                
+                #first check if the movie already exists in db
+                if not db.session.query(db.exists().where(models.Movies.ImdbID == elem['imdbID'])).scalar():
         
-                new_movie = models.Movies(
-                Title = elem['Title'],
-                Year = elem['Year'],
-                Poster_URL= elem['Poster'],
-                Type = elem['Type'],
-                ImdbID = elem['imdbID'])
+                    new_movie = models.Movies(
+                    Title = elem['Title'],
+                    Year = elem['Year'],
+                    Poster_URL= elem['Poster'],
+                    Type = elem['Type'],
+                    ImdbID = elem['imdbID'])
+                    
+                    itemsAdded +1
         
-                db.session.add(new_movie)
+                    try:    
+                        db.session.add(new_movie)
+                
+                    
+                    except Exception as e:
+                    
+                        return {"status": 3, "data": e}
             
             try:
-                
                 db.session.commit()
-                    
+                
             except Exception as e:
-                    
-                return {"status": 7, "data": e}
-                            
+                
+                return{"status":3,"data":e}
         
-        returndata = {"status": 1, "data":"Successfully added %s items" %(dataList.len())}
+            returndata = {"status": 1, "data":"Successfully added %s items" %(itemsAdded)}
             
         return returndata

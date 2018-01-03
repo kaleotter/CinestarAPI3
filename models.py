@@ -24,11 +24,11 @@ class Users(db.Model):
 class Movies (db.Model):
     __tablename__ ='Movies'
     
-    MovieID = db.Column(db.Integer, primary_key=True)
+    MovieID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Title = db.Column(db.String)
     Year = db.Column(db.Integer)
     Certification = db.Column(db.String(45))
-    Release_date = db.Column(db.DATETIME)
+    Release_date = db.Column(db.String(50))
     Runtime = db.Column(db.String())
     Genres = db.Column(db.String(1000)) 
     Directors = db.Column(db.String(1000)) 
@@ -39,12 +39,12 @@ class Movies (db.Model):
     Country = db.Column(db.String(70)) 
     Awards = db.Column(db.String(500)) 
     Poster_URL = db.Column(db.String(1000)) 
-    IMDBRating = db.Column (db.DECIMAL(1,0)) 
-    MetaScore =db.Column(db.DECIMAL(1,0)) 
+    IMDBRating = db.Column (db.Float) 
+    MetaScore =db.Column(db.Float) 
     Type = db.Column(db.String(50)) 
-    DVD =db.Column(db.DATE)
+    DVD =db.Column(db.String(50))
     Website = db.Column(db.String(500))
-    ImdbID = db.Column (db.Integer)
+    ImdbID = db.Column (db.String(30))
     
     def  __repr__(self):
         return "<Movies (Title='%s',Year='%s',Certification='%s',Release_date='%s',Runtime='%s',Genres='%s',Directors='%s',Writers='%s', Actors='%s', Synopsis='%s', languages='%s', Country='%s',Awards='%s',Poster_URL='%s',IMDBRating='%s', MetaScore='%s',Type='%s',DVD='%s',Website='%s', ImdbID = '%s')>" % (
@@ -82,6 +82,6 @@ class UserSchema (ma.ModelSchema):
 class MoviesSearchSchema(ma.ModelSchema):
     class Meta:
         model = Movies
-        fields= ('Title', 'Year', 'imdbID', 'Type')
+        fields= ('Title', 'Year', 'imdbID', 'Poster_URL', 'Type')
         
 Mov_S_Schema = MoviesSearchSchema(many = True)

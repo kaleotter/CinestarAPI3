@@ -37,16 +37,16 @@ class MovieSearch (Resource):
 #parameters for the movie search
     mov_search_args = {
         'm': fields.String(required=True, location = 'query'),         #we always need a movie name
-        'a': fields.String(required=False, missing='', location ='query'),                #optionally we need an actor name
-        'order': fields.Integer(required=False, missing=0, location = 'query'),
-        'sort':     fields.String (required=False, missing ='ascending', location = 'query')        #we need to know how the user wants the data sorted
+        'a': fields.String(required=False, location ='query'),                #optionally we need an actor name
+        'order': fields.Integer(required=False, location = 'query'),
+        'sort':fields.String (required=False, location = 'query')        #we need to know how the user wants the data sorted
         }        
     @use_kwargs(mov_search_args)
     def get (self, m, a, order, sort):
-
-            result = 'if you see this then something went wrong'
+            returncode = 418
+            result = 'if you see this then something went wrong. Are you a teacup?'
             
-            search_result = MovieView.movSearch({"movie":m, "actor":a, "orderBy": order, "sort": sort})
+            search_result = MovieView.getMovies.summaries({"movie":m, "actor":a, "orderBy": order, "sort": sort})
             status_code = search_result['status']
             print (status_code)
 
@@ -59,30 +59,67 @@ class MovieSearch (Resource):
             return result, returncode
 
     @use_kwargs(mov_search_args)
-    def post (self, m, a, order, sort):
+    def put (self, m,a,order,sort):
+    
+        
+        data = MovieView.OMDB.summaries(m)
+        responsecode = 418
+        responsemsg = "Something totally unexpected went wrong. Are you a teacup?"
+        print (data)
             
-
-            data = MovieView.newMov({'m': m},"c")
+        if data['status'] == 1: #search completes successfully
             
+            responsemsg = data['data']
+            responsecode = 200
             
-                
-                
-
-            return ('not done yet')
+        elif data['status']== 2: #there was a problem contacting the OMBD API 
+        
+            responsemsg = "for some reson we could not contact OMDB for data. please try your request again" 
+            print (data['data'])
+            responsecode = 500
+            
+        elif data['status']== 3: #there was a problem with the database
+        
+            responsemsg = "There was a problem connecting to the database. Please try your request again"
+            print (data['data'])
+            responsecode = 503
+ 
+        return responsemsg, responsecode
     
 class MovieId (Resource):
-    def get (self,id):
+    def get (self,movie_id):
         
         #we're going to display a movie
         
         return ("not done yet")
+    
+    def put (self, movie_id):
         
+        data = MovieView.OMDB.update(movie_id)
+        responsecode = 418
+        responsemessage = "something totally unexpected went wrong. Are you a teacup?"
         
-
-    class  (Resource):
+        if data['status'] == 0: #then we found nothing
         
-        def put 
-
+            responsecode = 404
+            responsemessage = "No movie exists with that ID"
+        if data['status'] == 1: #then we found something
+            
+            responsecode =200
+            responsemessage = "Movie details added"
+        
+        if data['status'] == 2: #then the connection to the API went wrong
+            responsecode = 500
+            print (data['data'])
+            responsemessage = "for some reson we could not contact OMDB for data. please try your request again"
+            
+        if data['status']== 3: #Then something went wrong with the database
+            responsecode = 503
+            print (data['data'])
+            responsemessage = "Our connection to the database failed for some reason, please try again."
+            
+        return responsemessage, responsecode
+        
     class MovieReviews(Resource):
         def get(self,MovId):
             
@@ -94,11 +131,15 @@ class MovieId (Resource):
 
 
 class Users (Resource):
-
-    def post(self):                #create an acccount
+    args={'username': fields.String(required=True, location = 'form'),
+        'email': fields.String(Required=True, location = 'form'),
+        'password':fields.String(Required=True, location = 'form')}
     
-        json_data = request.get_json(force=True)
-        output = userView.createNewUser(json_data)
+    @use_kwargs(args)    
+    def post(self, username, email, password):                #create an acccount
+    
+        inputData = {"username": username, "email":email,"password":password}
+        output = userView.createNewUser(inputData)
         
         return(output)
 
@@ -145,22 +186,8 @@ class Login (Resource):
             return jsonify(response_data['data'])
 
 #AAAAAAAH I COMMENTED THIS OUT.     
-
-class UpdateMovie(Resource): #Updates a movie with all relevant data
-    def put (self, movie_ID):
-        
-        return ("still in progres")
-class AddSummary(Resource): #Adds summary data for new movie searches
-    
-    def put (self, movie_ID):
-        
-        return ("Im not done yet")
-        
-
 api.add_resource(Movies, '/movies')
-api.add_resource(MovieId, '/movies/<int:movie_ID>')
-api.add_resource(UpdateMovie, '/movies/<int:movie_ID/update')
-api.add_resource(AddMov, 'movies/summary')
+api.add_resource(MovieId, '/movies/<movie_id>')
 api.add_resource(MovieSearch, '/movies/search', endpoint='search')
 api.add_resource(Users, '/users')
 api.add_resource(Profile, '/users/<int:usr_ID>')
