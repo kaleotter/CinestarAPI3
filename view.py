@@ -147,6 +147,9 @@ class Login (Resource):
 #AAAAAAAH I COMMENTED THIS OUT.     
 
 class UpdateMovie(Resource): #Updates a movie with all relevant data
+    def put (self, movie_ID):
+        
+        return ("still in progres")
 class AddSummary(Resource): #Adds summary data for new movie searches
     
     def put (self, movie_ID):
@@ -162,5 +165,3 @@ api.add_resource(MovieSearch, '/movies/search', endpoint='search')
 api.add_resource(Users, '/users')
 api.add_resource(Profile, '/users/<int:usr_ID>')
 api.add_resource(Login, '/users/login')
-    
-

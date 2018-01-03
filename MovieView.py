@@ -10,32 +10,41 @@ import urllib3
 
 from app import db, ma, models
 
-class MovSearch
+#return status codes
+#0: no match found
+#1: Completed Successfully
+#2: Problem with OMDB link
+#3: Problem with Database 
+#4:
+#5:
+#6:
+
+class Search:
     def Search(queryArgs):
 
-    print ("we started movSearch")
-    containsexact=False
-    exactmatch={'0'}
+        print ("we started movSearch")
+        containsexact=False
+        exactmatch={'0'}
     
 
-    #first, check if anything even similar exists in the db. 
+        #first, check if anything even similar exists in the db. 
 
-    if db.session.query(exists().where(func.lower(models.Movies.Title.like(func.lower(queryArgs['movie']))))).scalar():
-        print ("we found similar")
-        similar = db.session.query(models.Movies).filter(func.lower([models.Movies.Title.like(func.lower(queryArgs['movie']))]))
+        if db.session.query(exists().where(func.lower(models.Movies.Title.like(func.lower(queryArgs['movie']))))).scalar():
+            print ("we found similar")
+            similar = db.session.query(models.Movies).filter(func.lower([models.Movies.Title.like(func.lower(queryArgs['movie']))]))
         
-        search_results = models.Mov_S_Schema(similar).jsonify
+            search_results = models.Mov_S_Schema(similar).jsonify
 
-        #check for an exact match
+            #check for an exact match
         if db.session.query(exists().where(func.lower(models.Movies.Title)==func.lower(queryArgs['movie']))).scalar():
             containsexact = True
             print ("an exact match was found")
      
-            return ({"status":"1"}) 
+            return ({"status":2}) 
 
-    else: #we found exactly nothing
+        else: #we found exactly nothing
         
-        return({"status":'0'})
+            return({"status":0})
 
  
     
@@ -59,7 +68,7 @@ class OMBD:
             
         except Exception as e:
         
-            returndata = {"status":4, "data": e}
+            returndata = {"status":2, "data": e}
         
         return returndata
         
@@ -118,7 +127,7 @@ class OMBD:
         else:
     
        #There was no movie at the provided ID
-            returndata = {"status":6, "data": "Movie Not found."}
+            returndata = {"status":0, "data": "Movie Not found."}
        
         return returndata
     
@@ -129,7 +138,7 @@ class OMBD:
         
         #check that our data is valid.
         if "Title" not in mData.keys():
-            responsedata = {"status": 5, "data": mData}
+            responsedata = {"status": 0, "data": mData}
             
             return (responsedata)
             
