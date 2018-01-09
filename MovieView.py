@@ -2,7 +2,6 @@ import json
 import urllib3  
 
 from app import db, ma, models
-
 #return status codes
 #0: no match found
 #1: Completed Successfully
@@ -20,18 +19,23 @@ class getMovies:
         print ("we started movSearch")
         containsexact=False
         exactmatch={'0'}
-    
+        
+        print ("the movie bieng searched : %s" %(queryArgs['movie']))
 
         #first, check if anything even similar exists in the db. 
         try:
             if db.session.query(db.exists().where(db.func.lower(models.Movies.Title.like(db.func.lower(queryArgs['movie']))))).scalar():
                 print ("we found similar")
                 
-                similar = db.session.query(models.Movies).filter(db.func.lower([models.Movies.Title.like(db.func.lower(queryArgs['movie']))]))
+                #similar = db.session.query(models.Movies).filter(db.func.lower([models.Movies.Title.like(db.func.lower(queryArgs['movie']))]))
+                similar = db.session.query(models.Movies).all #This appears to be the wrongness :(
+                schema = models.MoviesSumSchema(many=True)
+                
+            print (schema.dump(similar.data))
         
-            search_results = models.Mov_S_Schema(similar).jsonify
+            #search_results = similar
             
-            print (search_results)
+            #print (search_results)
             
         except Exception as e:
             print ("something went very wrong")
@@ -40,7 +44,7 @@ class getMovies:
 
         else: #we found exactly nothing
             print ("nothing found")
-            returnmeassage = {"status":0, "data":''}
+            returnmessage = {"status":0, "data":''}
             
         return returnmessage
 

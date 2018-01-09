@@ -79,9 +79,10 @@ class UserSchema (ma.ModelSchema):
     #user_schema = UserSchema()
     #users_schema = UserSchema(many=True)
     
-class MoviesSearchSchema(ma.ModelSchema):
+class MoviesSumSchema(ma.ModelSchema):
     class Meta:
         model = Movies
         fields= ('Title', 'Year', 'imdbID', 'Poster_URL', 'Type')
         
-Mov_S_Schema = MoviesSearchSchema(many = True)
+        
+    #Mov_S_Schema = MoviesSumSchema(many = True)

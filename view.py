@@ -141,6 +141,7 @@ class Users (Resource):
         inputData = {"username": username, "email":email,"password":password}
         output = userView.createNewUser(inputData)
         
+        
         return(output)
 
 class Profile (Resource):
@@ -178,7 +179,6 @@ class Login (Resource):
         if status == 2:
             print ("we got to an invalid user/pass")
 
-            
 
             return response_data['data'], 403
         else:
