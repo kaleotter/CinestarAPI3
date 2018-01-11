@@ -81,8 +81,8 @@ class UserSchema (ma.ModelSchema):
     
 class MoviesSumSchema(ma.ModelSchema):
     class Meta:
-        model = Movies
-        fields= ('Title', 'Year', 'imdbID', 'Poster_URL', 'Type')
+        model = Movies 
+        fields= ('MovieID','Title', 'Year', 'ImdbID', 'Poster_URL', 'Type')
         
         
     #Mov_S_Schema = MoviesSumSchema(many = True)

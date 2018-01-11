@@ -50,11 +50,18 @@ class MovieSearch (Resource):
             status_code = search_result['status']
             print (status_code)
 
-            if status_code == '0':  #nothing found. abort and give a 404. Client should then proceed to make a get request. 
+            if status_code == 0:  #nothing found. abort and give a 404. Client should then proceed to make a get request. 
                 print ('nothing found')
 
-                result = ({"Message":"no results found for %s" %(m)})
+                result = jsonify({"Message":"no results found for %s" %(m)})
                 returncode = 404
+                
+            if status_code == 1:
+                returncode = 200
+                result = search_result['data']
+            
+            if status_code ==4:
+                returncode=400
             
             return result, returncode
 

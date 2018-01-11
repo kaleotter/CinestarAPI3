@@ -7,7 +7,7 @@ from app import db, ma, models
 #1: Completed Successfully
 #2: Problem with OMDB link
 #3: Problem with Database 
-#4: 
+#4: General Exception
 #5:
 #6:
 
@@ -28,23 +28,37 @@ class getMovies:
                 print ("we found similar")
                 
                 #similar = db.session.query(models.Movies).filter(db.func.lower([models.Movies.Title.like(db.func.lower(queryArgs['movie']))]))
-                similar = db.session.query(models.Movies).all #This appears to be the wrongness :(
+                print ("querying db")
+                similar = db.session.query(models.Movies).all() #This appears to be the wrongness :(
+                print (type(similar))
+                print ("creating schema")
                 schema = models.MoviesSumSchema(many=True)
+                print ("dumping schema")
+                result = schema.dump(similar)
+                print ("all done.")
                 
-            print (schema.dump(similar.data))
+                try:
+                    print ("attempting to print results")
+                
+                    print (result.data)
+                    returnmessage = {'status':1, 'data': result.data}
+                
+                except Exception as e:
+                    print ("could not print result")
+                    print (e)
+                    return {"status":2, "data": e}
+                
         
-            #search_results = similar
-            
-            #print (search_results)
+            else: #we found exactly nothing
+                print ("nothing found")
+                returnmessage = {"status":4, "data":''}
             
         except Exception as e:
             print ("something went very wrong")
             print (e)
             return {"status":2, "data": e}
 
-        else: #we found exactly nothing
-            print ("nothing found")
-            returnmessage = {"status":0, "data":''}
+
             
         return returnmessage
 
