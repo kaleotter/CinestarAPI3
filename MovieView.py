@@ -1,7 +1,7 @@
 import json
 import urllib3  
 
-from app import db, ma, models
+from app import db, ma, models, jsonify
 #return status codes
 #0: no match found
 #1: Completed Successfully
@@ -11,64 +11,85 @@ from app import db, ma, models
 #5:
 #6:
 
-class getMovies:
-    def summaries(queryArgs):
+class GetMovie:
+    
+        
+    def summaries(self, searchTitle, searchYear):
         
         
 
-        print ("we started movSearch")
-        containsexact=False
-        exactmatch={'0'}
+        print ("we started movSearch")     
         
-        print ("the movie bieng searched : %s" %(queryArgs['movie']))
+        print ("the movie bieng searched : %s" %(searchTitle))
 
         #first, check if anything even similar exists in the db. 
         try:
-            if db.session.query(db.exists().where(db.func.lower(models.Movies.Title.like(db.func.lower(queryArgs['movie']))))).scalar():
-                print ("we found similar")
                 
-                #similar = db.session.query(models.Movies).filter(db.func.lower([models.Movies.Title.like(db.func.lower(queryArgs['movie']))]))
-                print ("querying db")
-                similar = db.session.query(models.Movies).all() #This appears to be the wrongness :(
-                print (type(similar))
-                print ("creating schema")
-                schema = models.MoviesSumSchema(many=True)
-                print ("dumping schema")
-                result = schema.dump(similar)
-                print ("all done.")
-                
-                try:
-                    print ("attempting to print results")
-                
-                    print (result.data)
-                    returnmessage = {'status':1, 'data': result.data}
-                
-                except Exception as e:
-                    print ("could not print result")
-                    print (e)
-                    return {"status":2, "data": e}
-                
-        
-            else: #we found exactly nothing
-                print ("nothing found")
-                returnmessage = {"status":4, "data":''}
+            #initialize the query
+            q = db.session.query(models.Movies)
             
+            #as title is always mandatory for our search, the filter should always try to match on title
+            filterQ=[db.func.lower(models.Movies.Title).contains(db.func.lower(searchTitle))]
+            
+            #optional search parameters go here. 
+            if searchYear is not None or '':
+                filterQ.append(models.Movies.Year.contains(searchYear))
+            
+            queryResult = q.filter(*filterQ).all()
+            
+            #use the schema to filter the result down to the summary fields 
+            schema = models.MoviesSumSchema(many=True)
+            result = schema.dump(queryResult)
+            
+
+            if result.data:
+                
+                print ("attempting to print results")
+
+                print (result.data)
+                returnmessage = {'status':1, 'data': {"summary": result.data}}
+                
+            else:   #we got no data back
+                returnmessage = {'status': 0 , 'data': "no results found for the presented parameters"}
+
         except Exception as e:
             print ("something went very wrong")
             print (e)
             return {"status":2, "data": e}
-
-
-            
+        
         return returnmessage
 
  
+    def details(self, movID): 
+        try: 
+            if models.Movies.query(db.exists()\
+         .where(models.Movies.MovieID == movID)).scalar():
+             
+                query = models.Movies.query.filter(Movies.MovieID == movID)
+            
+                schema= models.AllMovsSchema()
+            
+                returnmessage = {'status': 1, 'data': schema.dump(query)} 
+            
+            else:
+                #we didn't find anything
+                
+                returnmessage ={'status': 0, 'data': ""}
+        
+        except Exception as e:
+            #something went wrong with the database interaction
+            
+            return {'status':3, 'data': "The following error occured trying to access the database: %s" %(e)}
+        
+        return returnmessage
+
+
+class OMDB ():
     
-class OMDB:
     
     apiKey = '36d82221'
     
-    def accessAPI(arguments):
+    def accessAPI(self, arguments):
         
         MovUrl = 'http://www.omdbapi.com/'
         http = urllib3.PoolManager()
@@ -81,6 +102,7 @@ class OMDB:
                 MovUrl,
                 fields = arguments)
             returndata = json.loads(r.data.decode('utf8'))
+            print (returndata)
             
             print (arguments)
             
@@ -108,7 +130,7 @@ class OMDB:
                     return {"status":3, "data":e}
         
         
-                mData = OMDB.accessAPI({"apikey": OMDB.apiKey, "i": titleID.ImdbID, "type":"movie"})
+                mData = self.accessAPI({"apikey": self.apiKey, "i": titleID.ImdbID, "type":"movie"})
                 print (mData)
                 
                 #check that our data is valid.
@@ -177,11 +199,10 @@ class OMDB:
        
         return returndata
     
-    def summaries (movieTitle):
+    def summaries (self, data):
         
 
-        mData = OMDB.accessAPI({"apikey": OMDB.apiKey, "s": movieTitle, "type":"movie"})
-        
+        mData = self.accessAPI({"apikey": self.apiKey, "s": data['title'], "type":"movie"}) 
         #check that our data is valid.
         if "Search" not in mData.keys():
             responsedata = {"status": 2, "data": mData}
@@ -193,9 +214,10 @@ class OMDB:
             itemsAdded = 0  
             for elem in dataList: 
                 
+                print (elem)
                 #first check if the movie already exists in db
                 if not db.session.query(db.exists().where(models.Movies.ImdbID == elem['imdbID'])).scalar():
-        
+                
                     new_movie = models.Movies(
                     Title = elem['Title'],
                     Year = elem['Year'],
@@ -223,3 +245,62 @@ class OMDB:
             returndata = {"status": 1, "data":"Successfully added %s items" %(itemsAdded)}
             
         return returndata
+    
+class Reviews:
+        
+    def forMovie(self, movID):
+        print (movID)
+            
+        try:
+            if db.session.query(db.exists().
+            where(models.MovieReview.MovieID == movID)).scalar():
+
+                q= db.session.query(models.MovieReview.ReviewID,
+                                models.Users.username, 
+                                models.MovieReview.MovieID, 
+                                models.MovieReview.Score, 
+                                models.MovieReview.Review,
+                                models.MovieReview.DatePosted).\
+                                join(models.Users).\
+                                join(models.Movies).\
+                                filter(models.MovieReview.MovieID == movID).all()
+
+        
+                dict_for_json= {'reviews':[]}
+            
+                for r  in q: #for each review in the list returned above
+                    reviewdict ={"ID": r.ReviewID, "username": r.username, "movieID":r.MovieID, "score": r.Score, "review": r.Review, "dateposted":r.DatePosted}
+                    print (reviewdict)
+                    dict_for_json['reviews'].append(reviewdict)
+            
+            
+            
+                result =jsonify(dict_for_json)
+                result.status_code = 200
+            
+        
+            else: #no match for this movieID 
+            
+                result = jsonify("The requested resource was not found")
+                result.status_code = 404
+            
+            return result
+        
+        except Exception as e:
+            #something went wrong trying to contact the database
+            result = jsonify("there was an error connecting to the database: %s" %(e))
+            result.status_code = 503
+            #write something to the log here
+            
+            return result
+        
+        
+    def single(self, movID,revID):
+            
+        return result
+    
+    def allReviews(self):
+            
+        return result
+    def post (self, userID, reviewData):
+        return result

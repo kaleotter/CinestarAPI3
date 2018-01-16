@@ -4,7 +4,7 @@
 from flask import Flask, request, Response
 from requests import put, get
 from flask_restful import Resource, Api, abort, fields, marshal_with, reqparse 
-from json import dumps
+import json
 from webargs import fields, validate
 from webargs.flaskparser import use_kwargs, parser
 from flask_jsonpify import jsonify
@@ -15,6 +15,7 @@ from app import app
 #internal modules
 import userView
 import MovieView 
+import Messages
 
 
 api = Api(app)
@@ -34,42 +35,50 @@ class Movies(Resource):
 
 
 class MovieSearch (Resource):
-#parameters for the movie search
-    mov_search_args = {
-        'm': fields.String(required=True, location = 'query'),         #we always need a movie name
-        'a': fields.String(required=False, location ='query'),                #optionally we need an actor name
-        'order': fields.Integer(required=False, location = 'query'),
-        'sort':fields.String (required=False, location = 'query')        #we need to know how the user wants the data sorted
-        }        
-    @use_kwargs(mov_search_args)
-    def get (self, m, a, order, sort):
-            returncode = 418
-            result = 'if you see this then something went wrong. Are you a teacup?'
+    args={"title": fields.Str(required=True, location='json' ),
+        "year": fields.Int(required=False, missing= None, location = 'json')}    
+    
+    @use_kwargs(args)
+    def post (self, title, year):
+        
+        
+        #expected json values for this request
+        #title, actor, sort           
             
-            search_result = MovieView.getMovies.summaries({"movie":m, "actor":a, "orderBy": order, "sort": sort})
-            status_code = search_result['status']
+            returncode = 418
+            returndata = 'if you see this then something went wrong. Are you a teacup?'
+            
+            search= MovieView.GetMovie()
+            result= search.summaries(title, year)
+            print ("we tried searching")
+            status_code = result['status']
             print (status_code)
 
             if status_code == 0:  #nothing found. abort and give a 404. Client should then proceed to make a get request. 
-                print ('nothing found')
+                
 
-                result = jsonify({"Message":"no results found for %s" %(m)})
+                returndata = {"Message":"no results found"}
                 returncode = 404
                 
-            if status_code == 1:
+            if status_code == 1: #Everything Went fine
                 returncode = 200
-                result = search_result['data']
+                returndata = result['data']
             
-            if status_code ==4:
+            if status_code ==4: #we caught an unexpected error
                 returncode=400
+                returndata = result['data']
             
-            return result, returncode
+            return returndata, returncode
 
-    @use_kwargs(mov_search_args)
-    def put (self, m,a,order,sort):
-    
+
+class MovieAddSum(Resource):
+    def put (self):
         
-        data = MovieView.OMDB.summaries(m)
+        #Json expects only "title"
+        json_data = request.get_json(force=True) or 404
+        
+        search = MovieView.OMDB()
+        data = search.summaries(json_data)
         responsecode = 418
         responsemsg = "Something totally unexpected went wrong. Are you a teacup?"
         print (data)
@@ -93,16 +102,11 @@ class MovieSearch (Resource):
  
         return responsemsg, responsecode
     
-class MovieId (Resource):
-    def get (self,movie_id):
-        
-        #we're going to display a movie
-        
-        return ("not done yet")
-    
+class MovieAdd (Resource):
     def put (self, movie_id):
         
-        data = MovieView.OMDB.update(movie_id)
+        Movies = MovieView.OMDB()
+        data = Movies.update(movie_id)
         responsecode = 418
         responsemessage = "something totally unexpected went wrong. Are you a teacup?"
         
@@ -110,30 +114,77 @@ class MovieId (Resource):
         
             responsecode = 404
             responsemessage = "No movie exists with that ID"
-        if data['status'] == 1: #then we found something
+        elif data['status'] == 1: #then we found something
             
             responsecode =200
             responsemessage = "Movie details added"
         
-        if data['status'] == 2: #then the connection to the API went wrong
+        elif data['status'] == 2: #then the connection to the API went wrong
             responsecode = 500
             print (data['data'])
             responsemessage = "for some reson we could not contact OMDB for data. please try your request again"
             
-        if data['status']== 3: #Then something went wrong with the database
+        elif data['status']== 3: #Then something went wrong with the database
             responsecode = 503
             print (data['data'])
             responsemessage = "Our connection to the database failed for some reason, please try again."
             
         return responsemessage, responsecode
+    
+class MovieID(Resource):
+    def get(self, movie_id):
+        returndata = {"message":"Something seems to have gone terribly, terribly wrong. Are you a teacup?"}
+        returncode = 418
         
-    class MovieReviews(Resource):
-        def get(self,MovId):
+        Movie = MovieView.GetMovie()
+        data = Movie.details(movie_id)
+        
+        if data['status'] == 0: #File not found
             
-            return jsonify(result)
+            returndata = {"We could not find a movie with this id"}
+            returncode = 404
+            
+        elif data['status'] == 1: #We found a movie. Display it
+            returndata = data['data']
+            returncode = 200
+        elif data['status'] ==3: #There was a problem with the database
+            returndata = data['data']
+            returncode = 400
+            
+        return returndata, returncode
+        
+class MovieReviews(Resource):
+    def get(self, movie_id):
+        response = Response({"Something appears to have gone horribly wrong, are you a teacup?"},418, mimetype = 'application/json')
+        
+        reviews = MovieView.Reviews()
+        data = reviews.forMovie(movie_id)
+        print ("we got data")
+        
+        if data:    #if data is not empty
+            print (data)
+            response = data
+            
+            
+        return response
         
 
-
+class LiveChat(Resource):
+    
+    def get(self):
+        response_code= 418
+        response_message ="something has gone terribly wrong, are you a teacup?"
+        messages = Messages.LiveChat()#
+        print("tried to intantiate lc")
+        data = messages.getMessages()
+        print("we made the call")
+        
+        if data['status']==0:
+            response_code = 200
+            response_message = data['message']
+        
+        print (data)
+        return response_message, response_code
 
 
 
@@ -194,8 +245,12 @@ class Login (Resource):
 
 #AAAAAAAH I COMMENTED THIS OUT.     
 api.add_resource(Movies, '/movies')
-api.add_resource(MovieId, '/movies/<movie_id>')
-api.add_resource(MovieSearch, '/movies/search', endpoint='search')
+api.add_resource(MovieID, '/movies/<int:movie_id>', endpoint='movie_id')
+api.add_resource(MovieReviews, '/movies/<int:movie_id>/reviews')
+api.add_resource(MovieSearch, '/movies/search')
+api.add_resource(MovieAddSum, '/movies/summaries')
+api.add_resource(MovieAdd, '/movies/add')
 api.add_resource(Users, '/users')
 api.add_resource(Profile, '/users/<int:usr_ID>')
 api.add_resource(Login, '/users/login')
+api.add_resource(LiveChat,'/chat')
