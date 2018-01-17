@@ -302,5 +302,39 @@ class Reviews:
     def allReviews(self):
             
         return result
-    def post (self, userID, reviewData):
+    def postNew (self, movieID, reviewData):
+        
+        if 'newReview' in reviewData.keys():
+            r= reviewData['newReview']
+            #okay, so the data is good. Now check userID and movieID are valid
+            if not db.session.query(models.Users).filter(db.exists().where(models.Users.userID ==r['userid'])).first()\
+            or not db.session.query(models.Movies).filter(db.exists().where(models.Movies.MovieID == movieID)).first():
+            #Return 404 error and a message
+                result = jsonify({"message":"no entry could be found for the provided user or movie"})
+                result.status_code = 404
+            #TODO: log that someone failed a search
+          
+            else:
+                #okay, so we have a legitmate user and review. Now lets make sure we have valid data
+                #format should be {'newReview':{'userid': some int, 'score': some int, 'review': some string}
+            
+            
+                
+                newReview=models.MovieReview() #declare the new entry to the database
+            
+                newReview.MovieID = movieID
+                newReview.UserID = r['userid']
+                newReview.Score = r['score']
+                newReview.Review = r['review']
+                
+                db.session.add(newReview)
+                db.session.commit()
+                
+                result = jsonify({"message":"your review was sent successfully!"})
+                result.status_code = 201                
+        else:
+            #then something was wrong with the incoming json
+            result = jsonify({'message':'json data was malformed'})
+            result.status_code = 422
+            
         return result

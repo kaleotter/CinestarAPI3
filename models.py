@@ -1,4 +1,5 @@
 from app import db, ma
+import datetime
 
 class Users(db.Model):
 
@@ -23,7 +24,7 @@ class Users(db.Model):
 
     
 class Movies (db.Model):
-    __tablename__ ='Movies'
+    __tablename__ ='movies'
     
     MovieID = db.Column(db.Integer, primary_key=True, autoincrement=True)
     Title = db.Column(db.String(500))
@@ -46,7 +47,7 @@ class Movies (db.Model):
     DVD =db.Column(db.String(50))
     Website = db.Column(db.String(500))
     ImdbID = db.Column (db.String(30))
-    Reviews = db.relationship('MovieReview',backref='Movies',lazy=True)
+    Reviews = db.relationship('MovieReview',backref='movies',lazy=True)
     
     def  __repr__(self):
         return "<Movies (Title='%s',Year='%s',Certification='%s',Release_date='%s',Runtime='%s',Genres='%s',Directors='%s',Writers='%s', Actors='%s', Synopsis='%s', languages='%s', Country='%s',Awards='%s',Poster_URL='%s',IMDBRating='%s', MetaScore='%s',Type='%s',DVD='%s',Website='%s', ImdbID = '%s')>" % (
@@ -73,13 +74,13 @@ class Movies (db.Model):
                 )
                 
 class MovieReview(db.Model):
-    __tablename__ = 'MovieReview'
+    __tablename__ = 'moviereview'
     ReviewID = db.Column(db.Integer, primary_key=True, autoincrement = True)
-    MovieID = db.Column(db.Integer, db.ForeignKey("Movies.MovieID"), nullable=False)
+    MovieID = db.Column(db.Integer, db.ForeignKey("movies.MovieID"), nullable=False)
     UserID = db.Column(db.Integer, db.ForeignKey("users.userID"), nullable=False)
     Score = db.Column(db.Integer, nullable=False)
     Review = db.Column(db.String(5000), nullable=False)
-    DatePosted= db.Column(db.DATE)
+    DatePosted= db.Column(db.DateTime, nullable = False, default=datetime.datetime.utcnow)
     
 
     def __repr__ (self):

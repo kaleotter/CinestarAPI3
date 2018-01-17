@@ -167,6 +167,21 @@ class MovieReviews(Resource):
             
             
         return response
+    
+    def post(self,movie_id):
+        response = jsonify({'message':'something appears to have gone wrong. Are you a teacup?'})
+        response.statuscode = 418 
+        
+        json_data = request.get_json(force = True)
+        reviews = MovieView.Reviews()
+        data = reviews.postNew(movie_id,json_data)
+        if data: 
+            response = data
+        
+        
+        return response
+        
+        
         
 
 class LiveChat(Resource):
