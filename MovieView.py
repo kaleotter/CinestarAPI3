@@ -294,14 +294,6 @@ class Reviews:
             
             return result
         
-        
-    def single(self, movID,revID):
-            
-        return result
-    
-    def allReviews(self):
-            
-        return result
     def postNew (self, movieID, reviewData):
         
         if 'newReview' in reviewData.keys():
