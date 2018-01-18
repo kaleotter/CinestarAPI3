@@ -1,15 +1,16 @@
 # To change this license header, choose License Headers in Project Properties.
 # To change this template file, choose Tools | Templates
 # and open the template in the editor.
-from app import db, ma, json, models, helpers
+from app import db, ma, json, models, helpers, jsonify
 import certifi
 import urllib3
 from urllib.parse import urlencode
 
 
 class GBAPI:
-    def apiConnection(self,remoteResourcePath,apiFields, filters):
-        http = urllib3.PoolManager()
+    def apiConnection(self,remoteResourcePath,apiFields, filters, offset =False, ):
+        http = urllib3.PoolManager(cert_reqs ='CERT_REQUIRED',
+                                    ca_certs=certifi.where())
         print (remoteResourcePath)
         
         apiFields=urlencode({'field_list':apiFields})
@@ -20,12 +21,15 @@ class GBAPI:
         #format incoming data as json, expand fields as nessecary.
         #TODO: add additional logic if nessescary.
         
-        uri = 'http://www.giantbomb.com/api/'+ remoteResourcePath + '?api_key=%s&format=json' % (apiKey) \
-        +'&filter=%s' % (filters)\
-        +'&field_list=%s' %(apiFields)
+        uri = 'https://www.giantbomb.com/api/'+ remoteResourcePath + '?api_key=%s&format=json' % (apiKey) \
+        +'&%s' % (filters)\
+        +'&%s' %(apiFields)
         
-        print (uri)                                 
-        
+        if offset != False:
+            offset = urlencode({'offset':offset})
+            uri + '&%s' %(offset)
+            
+            
         try:
             r= http.request(
                 'GET', 
@@ -63,7 +67,7 @@ class GBAPI:
         
         #Work out filters and search fields
         filterlist ='name:%s'%(searchargs['name'])
-        fields ='name,original_release_date,original_game_rating,site_detail_url,image'
+        fields ='name,original_release_date,original_game_rating,site_detail_url,image,'
         if 'year' in searchargs.keys() and helpers.checkYear(searchargs.keys['year']):
             filterlist + ',original_release_date:%i'%(searchargs['year'])
         
@@ -76,6 +80,6 @@ class GBAPI:
         fields, filterlist)
         
         print (data)
-        return("nothing to see here boys")
+        return jsonify(data)
         
         

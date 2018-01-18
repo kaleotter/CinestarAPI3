@@ -272,7 +272,7 @@ class gameSummaries(Resource):
         data = summaries.gameSummaries({"name":title})
         
         print('aaaaaaaaa')
-        return {'aaaaaaaaaa'}
+        return data
         
 
 
