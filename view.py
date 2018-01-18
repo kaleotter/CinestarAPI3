@@ -16,6 +16,7 @@ from app import app
 import userView
 import MovieView 
 import Messages
+import games
 
 
 api = Api(app)
@@ -258,14 +259,31 @@ class Login (Resource):
             print ("we got to a valid user/pass")
             return jsonify(response_data['data'])
 
-#AAAAAAAH I COMMENTED THIS OUT.     
+
+class gameSummaries(Resource):
+    
+    def get(self):
+        summaries = games.GBAPI()
+        data = summaries.gameSummaries({"name":"Mass effect"})
+        
+        print('aaaaaaaaa')
+        return {'aaaaaaaaaa'}
+        
+
+
+#movie routes
 api.add_resource(Movies, '/movies')
 api.add_resource(MovieID, '/movies/<int:movie_id>', endpoint='movie_id')
 api.add_resource(MovieReviews, '/movies/<int:movie_id>/reviews')
 api.add_resource(MovieSearch, '/movies/search')
 api.add_resource(MovieAddSum, '/movies/summaries')
 api.add_resource(MovieAdd, '/movies/add')
+
+#user routes
 api.add_resource(Users, '/users')
 api.add_resource(Profile, '/users/<int:usr_ID>')
 api.add_resource(Login, '/users/login')
 api.add_resource(LiveChat,'/chat')
+
+#game routes
+api.add_resource(gameSummaries, '/games/summaries')

@@ -16,7 +16,7 @@ db = SQLAlchemy(app)
 ma = Marshmallow(app)
 
 
-from app import view, models
+from app import view, models, helpers
 
 
 
