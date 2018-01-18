@@ -262,9 +262,14 @@ class Login (Resource):
 
 class gameSummaries(Resource):
     
-    def get(self):
+    args={"title":fields.Str(required = True),
+        "year": fields.Int(required = False)
+    
+    }
+    @use_kwargs(args)
+    def get(self, title, year):
         summaries = games.GBAPI()
-        data = summaries.gameSummaries({"name":"Mass effect"})
+        data = summaries.gameSummaries({"name":title})
         
         print('aaaaaaaaa')
         return {'aaaaaaaaaa'}

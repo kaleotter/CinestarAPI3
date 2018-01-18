@@ -2,30 +2,43 @@
 # To change this template file, choose Tools | Templates
 # and open the template in the editor.
 from app import db, ma, json, models, helpers
+import certifi
 import urllib3
+from urllib.parse import urlencode
+
 
 class GBAPI:
-    def apiConnection(self,remoteResourcePath,**kwargs):
+    def apiConnection(self,remoteResourcePath,apiFields, filters):
         http = urllib3.PoolManager()
+        print (remoteResourcePath)
         
+        apiFields=urlencode({'field_list':apiFields})
+        filters=urlencode ({'filter':filters})        
+        #key to access the api
         apiKey = 'f23f99074aad79c28e3c4fad5f0b03f9ebe227dd'
         
-        fields = {'api_key':apiKey, **kwargs}
+        #format incoming data as json, expand fields as nessecary.
+        #TODO: add additional logic if nessescary.
         
-        uri = 'http://giantbond.com/api/' %(remoteResourcePath)
+        uri = 'http://www.giantbomb.com/api/'+ remoteResourcePath + '?api_key=%s&format=json' % (apiKey) \
+        +'&filter=%s' % (filters)\
+        +'&field_list=%s' %(apiFields)
+        
+        print (uri)                                 
         
         try:
             r= http.request(
                 'GET', 
-                MovUrl,
-                fields = fields)
+                uri,
+                headers = {"User-Agent": 'Flask-Restful API'})
             
             
             if r.status == 200:       #we have valid data
                 returndata = {"status": True, "data": json.loads(r.data.decode('utf8'))}
                 
             else:
-                returndata = {"status": False, "data": r.statuscode}
+                print (r.data)
+                returndata = {"status": False, "data": r.status}
                 
             
         except Exception as e:
@@ -41,21 +54,26 @@ class GBAPI:
         #{"title" titlename,"year": year_of_release} Keep search terms simple. 
         
         #construct fields here
-        uri = 'games/'
+        uri = 'games'
         
         
         
         #so first we should call the api to get data back
         conn = GBAPI()
         
-        #Work out filterstring
-        filterstring ='name:%s'%(searchargs['name'])
+        #Work out filters and search fields
+        filterlist ='name:%s'%(searchargs['name'])
+        fields ='name,original_release_date,original_game_rating,site_detail_url,image'
         if 'year' in searchargs.keys() and helpers.checkYear(searchargs.keys['year']):
-            filterstring += ',original_release_date:%i'%(searchargs['year'])
+            filterlist + ',original_release_date:%i'%(searchargs['year'])
+        
+        print (fields)
+        print (filterlist)
+        
+    
         
         data = conn.apiConnection(uri,
-        filter = filterstring,
-        field_list='name,original_release_date, image')
+        fields, filterlist)
         
         print (data)
         return("nothing to see here boys")
