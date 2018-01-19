@@ -121,10 +121,10 @@ class Games(db.Model):
     gb_guid = db.Column(db.String,nullable=False)
     game_rating = db.Column(db.String, nullable = True)
     platforms = db.Column(db.String, nullable = True)
-    summary = db.Column(LONGTEXT, nullable = False)
+    game_summary = db.Column(db.String, nullable = False)
     date_added = db.Column(db.DateTime, nullable = False)
     last_updated = db.Column(db.DateTime, nullable = True)
-    description = db.Column(LONGTEXT, nullable = False)
+    description = db.Column(db.String, nullable = False)
     dlc = db.Column(db.String, nullable = False)
     genres = db.Column(db.String, nullable = True)
     developers = db.Column(db.String, nullable = True)
@@ -132,6 +132,8 @@ class Games(db.Model):
     aggregateScore= db.Column(DOUBLE, nullable=True)
     number_reviews= db.Column(db.Integer, nullable =True)
     image_url =db.Column(db.String, nullable = True)
+    giantbomb_url = db.Column(db.String, nullable = False)
+    
     
     
     def __repr__(self):
@@ -141,7 +143,7 @@ class Games(db.Model):
                 self.gb_guid,
                 self.game_rating,
                 self.platforms,
-                self.summary,
+                self.game_summary,
                 self.date_added,
                 self.last_updated,
                 self.description,

@@ -267,9 +267,15 @@ class gameSummaries(Resource):
     
     }
     @use_kwargs(args)
-    def get(self, title):
+    def get(self, title,year=0):
         summaries = games.GBAPI()
+        searchargs = {'name':title}
+        if year != 0:
+        
+            searchargs['year'] = year
+        
         data = summaries.gameSummaries({"name":title})
+        
         
         print('aaaaaaaaa')
         return data

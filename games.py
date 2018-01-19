@@ -69,27 +69,85 @@ class GBAPI:
         
         #filters
         filterlist ='name:%s'%(searchargs['name'])
-        fields ='name,original_release_date,original_game_rating,site_detail_url,image,deck,site_detail_url'
+        fields ='name,original_release_date,original_game_rating,site_detail_url,image,deck,site_detail_url,platforms,guid'
         if 'year' in searchargs.keys() and helpers.checkYear(searchargs.keys['year']):
             filterlist + ',original_release_date:%i'%(searchargs['year'])
             
-        #encode data into python data structure
-        data = json.loads(conn.apiConnection(uri,
-        fields, filterlist))
         
-        data_check = conn.checkStatus(data)
+        data = conn.apiConnection(uri,
+        fields, filterlist)
         
-        if not datacheck["isOkay"]:
+        #extract the data
+        data = data['data']
+        
+        data_check = conn.checkStatus(data['error'])
+        
+        #check if json has results
+        if data["number_of_page_results"] ==0:
+            
+            response = jsonify ({"message":"we could not find further results on giantbomb.com"})
+            response.status_code = 404
+            
+            
+        
+        
+        
+        if not data_check["isOkay"]:
             #if the data is not correctly formed return a 500 code
             response = jsonify ({"Message":"something went wrong with the format to the remote api: %s"})
             response.status_code = 500
             return response
         
         #Now we know that the data is good we can loop through it
-        newgame = models.Games
+        newgame = models.Games()
+        summarycount = 0
         
         for game in data['results']:
+            newgame.name = game['name']
+            newgame.release_date = game['original_release_date']
+            newgame.gb_guid = game['guid']
+            newgame.game_summary = game['deck']
+            newgame.image_url = game['image']['medium_url']
+            newgame.giantbomb_url = game['site_detail_url']
             
+            
+        
+            #for fields that return list values, that we also want a set of specific values from:
+            
+            ###ratings###
+            
+            ratinglist = ""
+            for rating in game['original_game_rating']:
+                ratinglist + "%s," %(rating['name'])
+                
+            #slice the string to remove the trailing whitespace and comma
+            #add compiled list to the new dbobject
+            newgame.rating = ratinglist[:-3]
+            
+            
+            
+            
+            ###platforms###
+            platform_list = ""
+            for platform in game['platforms']:
+                platform_list + "%s, " %(platform['name'])
+            
+            #slice the string to remove the trailing whitespace and comma and
+            #add the string to the new dbobject
+            newgame.platforms= platform_list[:-3]
+            
+            db.session.add(newgame)
+            summarycount + 1
+        
+        try:
+            db.session.commit()
+            response = jsonify ({"we added %i new game summaries" %(summarycount)})
+        
+        except Exception as e: 
+            
+            print (e)
+            response =jsonify({"message": 'database error'})
+            response.status_code = 500
         
         
         return response
@@ -99,14 +157,16 @@ class GBAPI:
     #Simple check of the data in Json,     
         if data == "OK":
             #data should be fine.
-            return {'isOK':True, "msg":"none"}
+            return {'isOkay':True, "msg":"none"}
         else: 
             #There was something wrong with the request, but it went through 
             #successfully. Return false and print to log.
             
             #TODO: Impliment logging. Use print for debugging
-            print(data['error'])
+            print(data)
             
               
-            return {'isOK':True, "msg":data['error']}
+            return {'isOkay':True, "msg":data}
+        
+
         
