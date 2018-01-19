@@ -1,4 +1,5 @@
 from app import db, ma
+from sqlalchemy.dialects.mysql import LONGTEXT, DOUBLE
 import datetime
 
 class Users(db.Model):
@@ -110,6 +111,49 @@ class LiveChat(db.Model):
     self.UserID,
     self.ChatMsg
     )
+    
+class Games(db.Model):
+    __tablename__ = 'games'
+    
+    gameID = db.Column(db.Integer, primary_key=True, autoincrement = True)
+    name = db.Column(db.String(500), nullable = False)
+    release_date = db.Column(db.DateTime, nullable = False)
+    gb_guid = db.Column(db.String,nullable=False)
+    game_rating = db.Column(db.String, nullable = True)
+    platforms = db.Column(db.String, nullable = True)
+    summary = db.Column(LONGTEXT, nullable = False)
+    date_added = db.Column(db.DateTime, nullable = False)
+    last_updated = db.Column(db.DateTime, nullable = True)
+    description = db.Column(LONGTEXT, nullable = False)
+    dlc = db.Column(db.String, nullable = False)
+    genres = db.Column(db.String, nullable = True)
+    developers = db.Column(db.String, nullable = True)
+    publishers = db.Column(db.String, nullable = True)
+    aggregateScore= db.Column(DOUBLE, nullable=True)
+    number_reviews= db.Column(db.Integer, nullable =True)
+    image_url =db.Column(db.String, nullable = True)
+    
+    
+    def __repr__(self):
+        return "<games(name = '%s',release_date = '%s',gb_guid = '%s',game_rating = '%s',platforms ='%s',summary = '%s',date_added = '%s',last_updated = '%s',description = '%s',dlc = '%s',genres = '%s',developers = '%s', publishers ='%s',aggregateScore= %f, number_reviews=%i, image_url = '%s')>" %(
+                self.name,
+                self.release_date,
+                self.gb_guid,
+                self.game_rating,
+                self.platforms,
+                self.summary,
+                self.date_added,
+                self.last_updated,
+                self.description,
+                self.dlc,
+                self.genres,
+                self.developers,
+                self.publishers,
+                self.aggregateScore,
+                self.number_reviews,
+                self.image_url)
+    
+    
 #Schemas
 class UserSchema (ma.ModelSchema):
     class Meta:
@@ -124,3 +168,8 @@ class MoviesSumSchema(ma.ModelSchema):
 class AllMovsSchema(ma.ModelSchema):
     class Meta:
         model = Movies
+        
+class gameSummarySchema(ma.ModelSchema):
+    class Meta:
+        model = Games
+        fields = ('gameid','name', 'release_date', 'summary', 'image_url')

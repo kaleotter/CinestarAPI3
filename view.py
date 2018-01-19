@@ -267,7 +267,7 @@ class gameSummaries(Resource):
     
     }
     @use_kwargs(args)
-    def get(self, title, year):
+    def get(self, title):
         summaries = games.GBAPI()
         data = summaries.gameSummaries({"name":title})
         

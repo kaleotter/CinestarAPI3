@@ -66,20 +66,47 @@ class GBAPI:
         conn = GBAPI()
         
         #Work out filters and search fields
+        
+        #filters
         filterlist ='name:%s'%(searchargs['name'])
-        fields ='name,original_release_date,original_game_rating,site_detail_url,image,'
+        fields ='name,original_release_date,original_game_rating,site_detail_url,image,deck,site_detail_url'
         if 'year' in searchargs.keys() and helpers.checkYear(searchargs.keys['year']):
             filterlist + ',original_release_date:%i'%(searchargs['year'])
+            
+        #encode data into python data structure
+        data = json.loads(conn.apiConnection(uri,
+        fields, filterlist))
         
-        print (fields)
-        print (filterlist)
+        data_check = conn.checkStatus(data)
+        
+        if not datacheck["isOkay"]:
+            #if the data is not correctly formed return a 500 code
+            response = jsonify ({"Message":"something went wrong with the format to the remote api: %s"})
+            response.status_code = 500
+            return response
+        
+        #Now we know that the data is good we can loop through it
+        newgame = models.Games
+        
+        for game in data['results']:
+            
+        
+        
+        return response
         
     
-        
-        data = conn.apiConnection(uri,
-        fields, filterlist)
-        
-        print (data)
-        return jsonify(data)
-        
+    def checkStatus (self, data):
+    #Simple check of the data in Json,     
+        if data == "OK":
+            #data should be fine.
+            return {'isOK':True, "msg":"none"}
+        else: 
+            #There was something wrong with the request, but it went through 
+            #successfully. Return false and print to log.
+            
+            #TODO: Impliment logging. Use print for debugging
+            print(data['error'])
+            
+              
+            return {'isOK':True, "msg":data['error']}
         
